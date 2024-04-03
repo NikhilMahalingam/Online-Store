@@ -28,6 +28,7 @@ CREATE TABLE Orders (
     customer_id INT,
     order_date DATE,
     total_amount DECIMAL(10, 2),
+    status VARCHAR(20), -- Cart / Pending / Completed
     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 
