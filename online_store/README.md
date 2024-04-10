@@ -8,7 +8,14 @@ On macOS/Linux: `source venv/bin/activate`
 `pip install -r requirements.txt`
 
 # Start PostgreSQL
-`sudo service postgresql start`
+With Homebrew: `brew services start postgresql`
+Stop: `brew services stop postgresql`
+
+# Access PostgreSQL shell
+`psql postgres`
+
+# Users
+Test user: `username: username, password: password123`
 
 # Run Flask app
 `cd online_store && python app.py`
