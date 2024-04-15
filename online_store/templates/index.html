@@ -4,26 +4,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Store</title>
+    <title>Nikhil and Andrew's Online Store</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        .store-info {
+            margin-top: 50px;
+        }
+
+        .store-info h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .store-info p {
+            margin-bottom: 20px;
+        }
+
+        .why-choose-us {
+            margin-top: 20px;
+        }
+
+        .why-choose-us h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .why-choose-us ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .why-choose-us ul li {
+            margin-bottom: 10px;
+        }
+
+        .offer-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .offer-content p {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="container">
+    <div>
         <header>
-            <h1 class="text-center mt-5">Welcome to Nikhil and Andrew's Online Store</h1>
-            <p class="lead text-center">Discover amazing products at great prices.</p>
+            <h1>Welcome to Nikhil and Andrew's Online Store</h1>
+            <p class="lead">Discover amazing products at great prices.</p>
         </header>
+
+        <div class="row justify-content-center store-info">
+            <div class="col-md-8">
+                <div class="offer-info">
+                    <h2>What We Offer</h2>
+                    <div class="offer-content">
+                        <p>We pride ourselves on offering a wide range of products to meet your every need. Whether
+                            you're looking for cutting-edge technology or everyday essentials, we've got you covered.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="col-md-8" />
+
+        <div class="row justify-content-center why-choose-us">
+            <div class="col-md-8 why-choose-us">
+                <h2>Why Choose Us?</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <h4>💰 Competitive Prices</h4>
+                            <p>Discover amazing deals that won't break the bank.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <h4>📦 Vast Inventory</h4>
+                            <p>Explore a treasure trove of products to suit every need.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <h4>❤️ Great Customer Service</h4>
+                            <p>Our dedicated team is here to assist you every step of the way.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <h4>🚚 Fast and Reliable Shipping</h4>
+                            <p>Get your products delivered to your doorstep in no time.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <h4>🔒 Secure Checkout</h4>
+                            <p>Shop with confidence knowing your information is safe and secure.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row justify-content-center mt-5">
             <div class="col-md-6 text-center">
                 <a href="store" class="btn btn-primary btn-lg">Shop Now</a>
             </div>
         </div>
+        <br /><br /><br />
     </div>
 
     <!-- Bootstrap JS (Optional) -->
