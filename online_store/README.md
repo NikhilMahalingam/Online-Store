@@ -1,24 +1,36 @@
 Simple Flask application for Online Store.
 
-# Source virtual environment (local development)
+# App Setup
+
+## Source virtual environment (local development)
 On Windows: `venv\Scripts\activate`
 On macOS/Linux: `source venv/bin/activate`
 
-# Install dependencies
+## Install dependencies
 `pip install -r requirements.txt`
 
-# Start PostgreSQL
+## Start PostgreSQL & Set up database
 With Homebrew: `brew services start postgresql`
 Stop: `brew services stop postgresql`
 
-# Access PostgreSQL shell
+```
+psql postgres
+\i /path/to/schema.sql -- Build tables
+\i /path/to/insert_sample_products.sql -- Insert sample data
+```
+
+## Start Flask app
+`cd online_store && python app.py`
+
+# PostgreSQL Help
+## Access PostgreSQL shell
 `psql postgres`
 
-# Users
+## Users
 Test user: `username: username, password: password123`
 
-# Run Flask app
-`cd online_store && python app.py`
+## Run script
+`\i path/to/script.sql`
 
 
 

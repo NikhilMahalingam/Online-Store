@@ -20,7 +20,6 @@ class Product(db.Model):
 @app.route('/store')
 def store():
     products = Product.query.all()
-    print(products)
     return render_template('store.html', products=products)
 
 @app.route('/')
