@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            margin-bottom: 20px;
+        }
+
+        .sort-select {
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .product {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .product h2 {
+            margin-top: 0;
+        }
+
+        .product p {
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .product .price {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .product .stock {
+            font-style: italic;
+        }
+
+        .add-to-cart {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+
+        button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .add-to-cart button:hover {
+            background-color: #0056b3;
+        }
+
+        .add-to-cart input[type="number"] {
+            width: 60px;
+            padding: 4px;
+            text-align: center;
+        }
+
+        .view-cart {
+            float: right;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Shop our selection!</h1>
+        <div class="search-bar">
+            <form action="/search" method="GET">
+                <input type="text" name="query" placeholder="Search...">
+                <select name="sort" class="sort-select">
+                    <option value="">Sort By</option>
+                    <option value="price">Price</option>
+                    <option value="quantity">Quantity</option>
+                </select>
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="products">
+            {% for product in products %}
+            <div class="product">
+                <h2>{{ product.name }}</h2>
+                <p>{{ product.description }}</p>
+                <br /><br />
+                <p class="price">${{ product.price }}</p>
+                <form action="/add_to_cart" method="POST" class="add-to-cart">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <label for="quantity">Qty:</label>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1">
+                    <button type="submit">Add to Cart</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="/view_cart" class="view-cart">View Cart</a>
+        <a href="/" class="back-button">Back to home</a>
+    </div>
+</body>
+
+</html>
