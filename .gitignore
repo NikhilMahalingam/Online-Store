@@ -1,2 +1,4 @@
 venv/
 *.pyc
+online_store/__pycache__
+.env
