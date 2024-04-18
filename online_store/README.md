@@ -8,6 +8,8 @@ On macOS/Linux: `source venv/bin/activate`
 
 ## Install dependencies
 `pip install -r requirements.txt`
+OR
+`python -m pip install -r requirements.txt`
 
 ## Start PostgreSQL & Set up database
 With Homebrew: `brew services start postgresql`
@@ -32,7 +34,8 @@ Test user: `username: username, password: password123`
 ## Run script
 `\i path/to/script.sql`
 
-
+## .env example
+DATABASE_URI=postgresql://username:password123@localhost/online_store
 
 # installations
 Flask 

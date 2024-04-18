@@ -22,15 +22,19 @@ CREATE TABLE Products (
     stock_quantity INT
 );
 
+CREATE TYPE order_status AS ENUM ('cart', 'pending', 'completed');
+
 -- ORDERS
 CREATE TABLE Orders (
     order_id INT PRIMARY KEY,
     customer_id INT,
     order_date DATE,
     total_amount DECIMAL(10, 2),
-    status VARCHAR(20), -- Cart / Pending / Completed
+    status order_status NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
+
+
 
 -- ORDER ITEMS (ITEMS IN AN ORDER)
 CREATE TABLE Order_Items (
@@ -42,7 +46,6 @@ CREATE TABLE Order_Items (
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
 );
-
 -- TODO: 
 -- PAYMENTS?
 -- RETURNS?
