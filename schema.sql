@@ -2,7 +2,7 @@
 
 -- CUSTOMERS
 CREATE TABLE Customers (
-    customer_id INT PRIMARY KEY,
+    customer_id SERIAL PRIMARY KEY,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     email VARCHAR(100),
@@ -15,7 +15,7 @@ CREATE TABLE Customers (
 
 -- PRODUCTS
 CREATE TABLE Products (
-    product_id INT PRIMARY KEY,
+    product_id SERIAL PRIMARY KEY,
     name VARCHAR(100),
     description TEXT,
     price DECIMAL(10, 2),
@@ -26,7 +26,7 @@ CREATE TYPE order_status AS ENUM ('cart', 'pending', 'completed');
 
 -- ORDERS
 CREATE TABLE Orders (
-    order_id INT PRIMARY KEY,
+    order_id SERIAL PRIMARY KEY,
     customer_id INT,
     order_date DATE,
     total_amount DECIMAL(10, 2),
@@ -38,7 +38,7 @@ CREATE TABLE Orders (
 
 -- ORDER ITEMS (ITEMS IN AN ORDER)
 CREATE TABLE Order_Items (
-    order_item_id INT PRIMARY KEY,
+    order_item_id SERIAL PRIMARY KEY,
     order_id INT,
     product_id INT,
     quantity INT,
