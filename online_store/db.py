@@ -7,7 +7,7 @@ db = SQLAlchemy()
 
 class Products(db.Model):
     __tablename__ = 'products'
-    product_id = db.Column(Integer, primary_key=True)
+    product_id = db.Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(String(100), nullable=False)
     description = db.Column(Text, nullable=True)
     price = db.Column(DECIMAL(10, 2), nullable=False)
@@ -16,7 +16,7 @@ class Products(db.Model):
 
 class Customers(db.Model):
     __tablename__ = 'customers'
-    customer_id = db.Column(Integer, primary_key=True)
+    customer_id = db.Column(Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(String(50), nullable=False)
     last_name = db.Column(String(50), nullable=False)
     email = db.Column(String(100), nullable=False)
@@ -34,7 +34,7 @@ class OrderStatus(enum.Enum):
 
 class Orders(db.Model):
     __tablename__ = 'orders'
-    order_id = db.Column(Integer, primary_key=True)
+    order_id = db.Column(Integer, primary_key=True, autoincrement=True)
     customer_id = db.Column(Integer, ForeignKey('customers.customer_id'))
     order_date = db.Column(Date)
     total_amount = db.Column(DECIMAL(10, 2))
@@ -44,7 +44,7 @@ class Orders(db.Model):
 
 class OrderItems(db.Model):
     __tablename__ = 'order_items'
-    order_item_id = db.Column(Integer, primary_key=True)
+    order_item_id = db.Column(Integer, primary_key=True, autoincrement=True)
     order_id = db.Column(Integer, ForeignKey('orders.order_id'))
     product_id = db.Column(Integer, ForeignKey('products.product_id'))
     quantity = db.Column(Integer)
