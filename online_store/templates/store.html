@@ -102,6 +102,16 @@
 
 <body>
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <h1>Shop our selection!</h1>
         <div class="search-bar">
             <form action="/search" method="GET">
@@ -121,10 +131,10 @@
                 <p>{{ product.description }}</p>
                 <br /><br />
                 <p class="price">${{ product.price }}</p>
-                <form action="/add_to_cart" method="POST" class="add-to-cart">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <label for="quantity">Qty:</label>
-                    <input type="number" id="quantity" name="quantity" value="1" min="1">
+                <form action="/cart" method="POST" class="add-to-cart">
+                    <input type="hidden" name="product_id" value="{{ product.product_id }}">
+                    <label for="quantity{{ product.product_id }}">Qty:</label>
+                    <input type="number" id="quantity{{ product.product_id }}" name="quantity" value="1" min="1">
                     <button type="submit">Add to Cart</button>
                 </form>
             </div>
@@ -132,7 +142,8 @@
         </div>
         <a href="/view_cart" class="view-cart">View Cart</a>
         <a href="/" class="back-button">Back to home</a>
-    </div>
+        </div>
+        
 </body>
 
 </html>
