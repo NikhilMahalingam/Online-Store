@@ -1,4 +1,9 @@
 -- Nikhil Mahalingam & Andrew Xie
+DROP TABLE IF EXISTS Order_Items;
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Customers;
+DROP TYPE IF EXISTS order_status;
 
 -- CUSTOMERS
 CREATE TABLE Customers (
