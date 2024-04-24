@@ -1,0 +1,44 @@
+<style>
+    nav {
+        background-color: #007bff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+    }
+
+
+    nav ul {
+        list-style: none;
+        display: flex;
+    }
+
+    nav ul li {
+        margin-right: 30px;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: #ebebeb;
+        padding: 15px;
+        transition: color 0.5s;
+    }
+
+    nav ul li a:hover {
+        color: #ff9900;
+    }
+
+    .cart-link {
+        margin-left: auto;
+    }
+</style>
+<nav>
+    <ul>
+        <li><a href="/"><b>Home</b></a></li>
+        <li><a href="/store"><b>Store</b></a></li>
+        <li><a href="/wishlist"><b>My Wishlist</b></a></li>
+    </ul>
+    <ul>
+        <li><a href="/view_cart" class="cart-link"><b>Cart</b></a></li>
+    </ul>
+</nav>
