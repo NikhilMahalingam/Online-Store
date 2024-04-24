@@ -21,8 +21,20 @@ db.init_app(app)
     
 @app.route('/store')
 def store():
-    products = Products.query.all()
-    return render_template('store.html', products=products)
+    query = request.args.get('query')
+    sort_by = request.args.get('sort')
+    filtered_products = Products.query.all()
+
+    if query:
+        filtered_products = [product for product in filtered_products if query.lower() in product.name.lower()]
+
+    if sort_by == 'stock':
+        filtered_products.sort(key=lambda x: x.stock_quantity, reverse=True)
+    elif sort_by == 'price-low':
+        filtered_products.sort(key=lambda x: x.price)
+    elif sort_by == 'price-high':
+        filtered_products.sort(key=lambda x: x.price, reverse=True)
+    return render_template('store.html', products=filtered_products)
 
 @app.route('/')
 def index():
