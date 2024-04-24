@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request, redirect, url_for, flash
-from db import db, Products, Customers, Orders, OrderItems
+from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
 from datetime import date
@@ -51,6 +51,25 @@ def view_cart():
         cart_items = []
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
+
+@app.route('/wishlist')
+def wishlist():
+    customer_id = 1
+    return render_template('wishlist.html', wishlist_items=[])
+
+@app.route('/orders')
+def orders():
+    customer_id = 1
+    orders = Orders.query.filter_by(customer_id=customer_id).all()
+
+    # We also need the product and status information from the order
+    for order in orders:
+        order_items = order.items
+        for item in order_items:
+            product = Products.query.get(item.product_id)
+            item.product_name = product.name 
+            item.price = product.price 
+    return render_template('orders.html', orders=orders)
 
 Session = scoped_session(sessionmaker(autoflush=False))
 
