@@ -85,7 +85,6 @@
 
         .view-cart {
             float: right;
-            margin-top: 10px;
         }
 
         .search-bar form {
@@ -128,6 +127,7 @@
 </head>
 
 <body>
+    {% include 'nav.html' %}
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -169,8 +169,6 @@
             </div>
             {% endfor %}
         </div>
-        <a href="/view_cart" class="view-cart">View Cart</a>
-        <a href="/" class="back-button">Back to home</a>
     </div>
 
 </body>
