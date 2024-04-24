@@ -25,18 +25,6 @@
             margin-bottom: 20px;
         }
 
-        .search-bar {
-            margin-bottom: 20px;
-        }
-
-        .sort-select {
-            padding: 5px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            outline: none;
-            cursor: pointer;
-        }
-
         .product {
             background-color: #fff;
             border-radius: 8px;
@@ -65,6 +53,7 @@
 
         .product .stock {
             font-style: italic;
+            margin: 0px;
         }
 
         .add-to-cart {
@@ -98,6 +87,43 @@
             float: right;
             margin-top: 10px;
         }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input[type="text"],
+        .search-bar select,
+        .search-bar button {
+            height: 40px;
+            flex: 4;
+            margin: 0;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-bar select {
+            flex: 1;
+            margin-left: 10px;
+        }
+
+        .search-bar button {
+            margin-left: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .search-bar button:hover,
+        .search-bar button:focus {
+            background-color: #0056b3;
+            outline: none;
+        }
     </style>
 </head>
 
@@ -115,12 +141,13 @@
 
         <h1>Shop our selection!</h1>
         <div class="search-bar">
-            <form action="/search" method="GET">
+            <form action="/store" method="GET">
                 <input type="text" name="query" placeholder="Search...">
                 <select name="sort" class="sort-select">
                     <option value="">Sort By</option>
-                    <option value="price">Price</option>
-                    <option value="quantity">Quantity</option>
+                    <option value="price-low">Price (low to high)</option>
+                    <option value="price-high">Price (high to low)</option>
+                    <option value="stock">Stock</option>
                 </select>
                 <button type="submit">Search</button>
             </form>
@@ -130,8 +157,9 @@
             <div class="product">
                 <h2>{{ product.name }}</h2>
                 <p>{{ product.description }}</p>
-                <br /><br />
+                <br />
                 <p class="price">${{ product.price }}</p>
+                <p class="stock">In Stock: {{ product.stock_quantity }}</p>
                 <form action="/cart" method="POST" class="add-to-cart">
                     <input type="hidden" name="product_id" value="{{ product.product_id }}">
                     <label for="quantity{{ product.product_id }}">Qty:</label>
