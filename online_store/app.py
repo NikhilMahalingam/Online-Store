@@ -86,7 +86,7 @@ def add_to_cart():
         order.total_amount = sum(item.unit_price * item.quantity for item in order.items)
         db.session.commit()
 
-        flash("Product added to cart successfully!", "success")
+        flash(f"{quantity}x {product.name} added to cart successfully!", 'success')
         return redirect(url_for('store'))
 
     except Exception as e:  
