@@ -52,6 +52,12 @@ def view_cart():
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
 
+@app.route('/wishlist')
+def wishlist():
+    customer_id = 1
+    
+    return render_template('my_wishlist.html', wishlist_items=[])
+
 Session = scoped_session(sessionmaker(autoflush=False))
 
 @app.route('/cart', methods=['POST'])
