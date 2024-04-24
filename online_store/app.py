@@ -94,6 +94,25 @@ def add_to_cart():
         flash(str(e), "error")  
         return redirect(url_for('store'))
 
+@app.route('/delete_item/<int:order_item_id>', methods=['POST'])
+def delete_item(order_item_id):
+    try:
+        order_item = OrderItems.query.get(order_item_id)
+        if order_item:
+            order = Orders.query.get(order_item.order_id)
+            db.session.delete(order_item)
+            db.session.commit()
+
+            order.total_amount = sum(item.unit_price * item.quantity for item in order.items)
+            db.session.commit()
+
+            flash('Item deleted successfully!', 'success')
+        else:
+            flash('Item not found!', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(str(e), 'error')
+    return redirect(url_for('view_cart'))
 
 
 
