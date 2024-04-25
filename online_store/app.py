@@ -1,9 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request, redirect, url_for, flash
-from db import db, Products, Customers, Orders, OrderItems
+from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
 from datetime import date
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -21,8 +22,20 @@ db.init_app(app)
     
 @app.route('/store')
 def store():
-    products = Products.query.all()
-    return render_template('store.html', products=products)
+    query = request.args.get('query')
+    sort_by = request.args.get('sort')
+    filtered_products = Products.query.all()
+
+    if query:
+        filtered_products = [product for product in filtered_products if query.lower() in product.name.lower()]
+
+    if sort_by == 'stock':
+        filtered_products.sort(key=lambda x: x.stock_quantity, reverse=True)
+    elif sort_by == 'price-low':
+        filtered_products.sort(key=lambda x: x.price)
+    elif sort_by == 'price-high':
+        filtered_products.sort(key=lambda x: x.price, reverse=True)
+    return render_template('store.html', products=filtered_products)
 
 @app.route('/')
 def index():
@@ -39,6 +52,38 @@ def view_cart():
         cart_items = []
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
+
+@app.route('/wishlist')
+def wishlist():
+    customer_id = 1
+    return render_template('wishlist.html', wishlist_items=[])
+
+@app.route('/orders')
+def orders():
+    customer_id = 1
+    orders = Orders.query.filter_by(customer_id=customer_id).order_by(desc(Orders.order_id)).all()
+
+    # We also need the product and status information from the order
+    for order in orders:
+        order_items = order.items
+        for item in order_items:
+            product = Products.query.get(item.product_id)
+            item.product_name = product.name 
+            item.price = product.price 
+
+    return render_template('orders.html', orders=orders)
+
+@app.route('/checkout')
+def checkout():
+    customer_id = 1
+    order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
+    order_items = order.items
+    for item in order_items:
+        product = Products.query.get(item.product_id)
+        item.product_name = product.name 
+        item.price = product.price 
+
+    return render_template('checkout.html', order=order)
 
 Session = scoped_session(sessionmaker(autoflush=False))
 
@@ -86,7 +131,7 @@ def add_to_cart():
         order.total_amount = sum(item.unit_price * item.quantity for item in order.items)
         db.session.commit()
 
-        flash("Product added to cart successfully!", "success")
+        flash(f"{quantity}x {product.name} added to cart successfully!", 'success')
         return redirect(url_for('store'))
 
     except Exception as e:  
@@ -114,6 +159,16 @@ def delete_item(order_item_id):
         flash(str(e), 'error')
     return redirect(url_for('view_cart'))
 
+@app.route('/confirm_order', methods=['POST'])
+def confirm_order():
+    if request.method == 'POST':
+        order_id = request.form['order_id']
+        order = Orders.query.get(order_id)
+        if order:
+            order.status = OrderStatus.completed
+            db.session.commit()
+        flash("Your order has been placed!", 'success')
+    return redirect(url_for('orders'))
 
 
 if __name__ == '__main__':
