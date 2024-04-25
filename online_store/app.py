@@ -4,6 +4,7 @@ from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
 from datetime import date
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -60,7 +61,7 @@ def wishlist():
 @app.route('/orders')
 def orders():
     customer_id = 1
-    orders = Orders.query.filter_by(customer_id=customer_id).all()
+    orders = Orders.query.filter_by(customer_id=customer_id).order_by(desc(Orders.order_id)).all()
 
     # We also need the product and status information from the order
     for order in orders:
@@ -69,7 +70,20 @@ def orders():
             product = Products.query.get(item.product_id)
             item.product_name = product.name 
             item.price = product.price 
+
     return render_template('orders.html', orders=orders)
+
+@app.route('/checkout')
+def checkout():
+    customer_id = 1
+    order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
+    order_items = order.items
+    for item in order_items:
+        product = Products.query.get(item.product_id)
+        item.product_name = product.name 
+        item.price = product.price 
+
+    return render_template('checkout.html', order=order)
 
 Session = scoped_session(sessionmaker(autoflush=False))
 
@@ -145,6 +159,16 @@ def delete_item(order_item_id):
         flash(str(e), 'error')
     return redirect(url_for('view_cart'))
 
+@app.route('/confirm_order', methods=['POST'])
+def confirm_order():
+    if request.method == 'POST':
+        order_id = request.form['order_id']
+        order = Orders.query.get(order_id)
+        if order:
+            order.status = OrderStatus.completed
+            db.session.commit()
+        flash("Your order has been placed!", 'success')
+    return redirect(url_for('orders'))
 
 
 if __name__ == '__main__':
