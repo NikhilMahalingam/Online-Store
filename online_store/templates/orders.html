@@ -96,6 +96,15 @@
 <body>
     {% include 'nav.html' %}
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
         <h1>My Orders</h1>
         {% if orders %}
         <div class="order-list">
