@@ -112,7 +112,7 @@ def checkout():
 
     # If there is no order then there are no items in the cart and we can't checkout
     if not order:
-        flash('You have no items in your cart!', 'error')
+        flash('You have no items in your cart!', 'danger')
         return redirect(url_for('view_cart'))
     
     order_items = order.items
@@ -134,7 +134,6 @@ def register():
 
         try:
             result = supabase.auth.sign_up({'email':email, 'password':password})
-            print("Supabase result:", result) 
 
             if result:
                 sql = """
@@ -156,12 +155,12 @@ def register():
                 flash('Registration successful! Please log in.', 'success')
                 return redirect(url_for('login'))
             else:
-                flash('Failed to register with Supabase. Please try again.', 'error')
+                flash('Failed to register with Supabase. Please try again.', 'danger')
                 return redirect(url_for('register'))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Registration failed: {str(e)}', 'error')
+            flash(f'Registration failed: {str(e)}', 'danger')
             return redirect(url_for('register'))
 
     return render_template('register.html')
@@ -173,20 +172,24 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        response = supabase.auth.sign_in_with_password({"email":email, "password":password})
-        if response:
-            session_obj = supabase.auth.get_session()
-            if session_obj:
+        try: 
+            response = supabase.auth.sign_in_with_password({"email":email, "password":password})
+            if response:
+                session_obj = supabase.auth.get_session()
+                if session_obj:
                     user_email = session_obj.user.user_metadata['email']
                     access_token = session_obj.access_token
                     session['user_email'] = user_email
                     session['access_token'] = access_token 
                     flash('Login successful!', 'success')
 
-            return redirect(url_for('store'))
-        else:
+                return redirect(url_for('store'))
+            else:
                 flash('Login failed. Please check your credentials.', 'danger')
                 return redirect(url_for('login'))
+        except Exception as e:
+            flash(f'An error occurred: {str(e)}', 'danger')
+            return redirect(url_for('login'))
     return render_template('login.html')
 
 
@@ -265,10 +268,10 @@ def delete_item(order_item_id):
 
             flash('Item deleted successfully!', 'success')
         else:
-            flash('Item not found!', 'error')
+            flash('Item not found!', 'danger')
     except Exception as e:
         db.session.rollback()
-        flash(str(e), 'error')
+        flash(str(e), 'danger')
     return redirect(url_for('view_cart'))
 
 @app.route('/confirm_order', methods=['POST'])
