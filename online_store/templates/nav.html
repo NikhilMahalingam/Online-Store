@@ -36,10 +36,20 @@
     <ul>
         <li><a href="/"><b>Home</b></a></li>
         <li><a href="/store"><b>Store</b></a></li>
-        <li><a href="/wishlist"><b>My Wishlist</b></a></li>
+        <li><a href="/wishlist"><b>Wishlist</b></a></li>
     </ul>
+    {% if g.current_user %}
+    <ul><li>Logged in as: {{ g.current_user }}</li></ul>
+    {% endif %}
     <ul>
         <li><a href="/orders" class="cart-link"><b>Orders</b></a></li>
-        <li><a href="/view_cart" class="cart-link"><b>Cart</b></a></li>
+        <li><a href="/view_cart" class="cart-link"><b>Cart ({{g.items_in_cart}})</b></a></li>
+        <li>
+            {% if g.current_user %}
+                <a href="/logout" class="cart-link"><b>Logout</b></a>
+            {% else %}
+                <a href="/login" class="cart-link"><b>Login</b></a>
+            {% endif %}
+        </li>
     </ul>
 </nav>

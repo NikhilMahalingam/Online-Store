@@ -18,8 +18,7 @@ Stop: `brew services stop postgresql`
 ```
 psql postgres
 \i /path/to/schema.sql -- Build tables
-\i /path/to/insert_sample_products.sql -- Insert sample products data
-\i /path/to/insert_sample_customers.sql -- Insert sample customers data
+\i /path/to/insert_sample_products.sql -- Insert sample data
 ```
 
 ## Start Flask app
@@ -28,6 +27,7 @@ psql postgres
 # PostgreSQL Help
 ## Access PostgreSQL shell
 `psql postgres`
+Specific user & database: `psql -d <database> -U <user>`
 
 ## Users
 Test user: `username: username, password: password123`
@@ -36,7 +36,11 @@ Test user: `username: username, password: password123`
 `\i path/to/script.sql`
 
 ## .env example
+```
 DATABASE_URI=postgresql://username:password123@localhost/online_store
+SUPABASE_URL=<url>
+SUPABASE_API_KEY=<api_key>
+```
 
 # installations
 Flask 
