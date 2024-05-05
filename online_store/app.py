@@ -109,7 +109,14 @@ def checkout():
     user_email = session.get('user_email')
     customer_id = get_customer_id_from_email(user_email)
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
+
+    # If there is no order then there are no items in the cart and we can't checkout
+    if not order:
+        flash('You have no items in your cart!', 'error')
+        return redirect(url_for('view_cart'))
+    
     order_items = order.items
+
     for item in order_items:
         product = Products.query.get(item.product_id)
         item.product_name = product.name 
