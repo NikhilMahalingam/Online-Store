@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
@@ -26,32 +26,12 @@ db.init_app(app)
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
-# Helpers
+#Routes for Pages
+
 def get_customer_id_from_email(email):
     customer = db.session.query(Customers).filter_by(email=email).first()
     return customer.customer_id if customer else None
-
-def get_cart_items(order):
-    cart_items = []
-    if order:
-        cart_items = OrderItems.query.filter_by(order_id=order.order_id).all()
-    return cart_items
-
-# Global state
-@app.before_request
-def before_request():
-    user_email = session.get('user_email')
-    customer_id = get_customer_id_from_email(user_email)
-    cart_order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
-    cart_items = get_cart_items(cart_order)
-    total_items = 0
-    for cart_item in cart_items:
-        total_items += cart_item.quantity
-
-    g.items_in_cart = total_items
-    g.current_user = user_email
-
-# Routes for Pages
+    
 @app.route('/store')
 def store():
     query = request.args.get('query')
@@ -78,7 +58,11 @@ def view_cart():
     user_email = session.get('user_email')
     customer_id = get_customer_id_from_email(user_email)
     cart_order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
-    cart_items = get_cart_items(cart_order)
+
+    if cart_order:
+        cart_items = OrderItems.query.filter_by(order_id=cart_order.order_id).all()
+    else:
+        cart_items = []
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
 
@@ -109,14 +93,7 @@ def checkout():
     user_email = session.get('user_email')
     customer_id = get_customer_id_from_email(user_email)
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
-
-    # If there is no order then there are no items in the cart and we can't checkout
-    if not order:
-        flash('You have no items in your cart!', 'danger')
-        return redirect(url_for('view_cart'))
-    
     order_items = order.items
-
     for item in order_items:
         product = Products.query.get(item.product_id)
         item.product_name = product.name 
@@ -125,7 +102,7 @@ def checkout():
     return render_template('checkout.html', order=order)
 
 
-# Routes for Functions
+#Routes for Functions
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -134,6 +111,7 @@ def register():
 
         try:
             result = supabase.auth.sign_up({'email':email, 'password':password})
+            print("Supabase result:", result) 
 
             if result:
                 sql = """
@@ -155,12 +133,12 @@ def register():
                 flash('Registration successful! Please log in.', 'success')
                 return redirect(url_for('login'))
             else:
-                flash('Failed to register with Supabase. Please try again.', 'danger')
+                flash('Failed to register with Supabase. Please try again.', 'error')
                 return redirect(url_for('register'))
 
         except Exception as e:
             db.session.rollback()
-            flash(f'Registration failed: {str(e)}', 'danger')
+            flash(f'Registration failed: {str(e)}', 'error')
             return redirect(url_for('register'))
 
     return render_template('register.html')
@@ -172,32 +150,20 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        try: 
-            response = supabase.auth.sign_in_with_password({"email":email, "password":password})
-            if response:
-                session_obj = supabase.auth.get_session()
-                if session_obj:
-                    user_email = session_obj.user.user_metadata['email']
+        response = supabase.auth.sign_in_with_password({"email":email, "password":password})
+        if response:
+            session_obj = supabase.auth.get_session()
+            if session_obj:
                     access_token = session_obj.access_token
-                    session['user_email'] = user_email
                     session['access_token'] = access_token 
                     flash('Login successful!', 'success')
 
-                return redirect(url_for('store'))
-            else:
+            return redirect(url_for('index'))
+        else:
                 flash('Login failed. Please check your credentials.', 'danger')
                 return redirect(url_for('login'))
-        except Exception as e:
-            flash(f'An error occurred: {str(e)}', 'danger')
-            return redirect(url_for('login'))
     return render_template('login.html')
 
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('store'))
 
 
 Session = scoped_session(sessionmaker(autoflush=False))
@@ -268,10 +234,10 @@ def delete_item(order_item_id):
 
             flash('Item deleted successfully!', 'success')
         else:
-            flash('Item not found!', 'danger')
+            flash('Item not found!', 'error')
     except Exception as e:
         db.session.rollback()
-        flash(str(e), 'danger')
+        flash(str(e), 'error')
     return redirect(url_for('view_cart'))
 
 @app.route('/confirm_order', methods=['POST'])
