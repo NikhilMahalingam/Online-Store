@@ -27,6 +27,10 @@ db.init_app(app)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 #Routes for Pages
+
+def get_customer_id_from_email(email):
+    customer = db.session.query(Customers).filter_by(email=email).first()
+    return customer.customer_id if customer else None
     
 @app.route('/store')
 def store():
@@ -51,7 +55,8 @@ def index():
 
 @app.route('/view_cart')
 def view_cart():
-    customer_id = session.get('user_id')
+    user_email = session.get('user_email')
+    customer_id = get_customer_id_from_email(user_email)
     cart_order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
 
     if cart_order:
@@ -63,12 +68,14 @@ def view_cart():
 
 @app.route('/wishlist')
 def wishlist():
-    customer_id = session.get('user_id')
+    user_email = session.get('user_email')
+    customer_id = get_customer_id_from_email(user_email)
     return render_template('wishlist.html', wishlist_items=[])
 
 @app.route('/orders')
 def orders():
-    customer_id = session.get('user_id')
+    user_email = session.get('user_email')
+    customer_id = get_customer_id_from_email(user_email)
     orders = Orders.query.filter_by(customer_id=customer_id).order_by(desc(Orders.order_id)).all()
 
     # We also need the product and status information from the order
@@ -83,7 +90,8 @@ def orders():
 
 @app.route('/checkout')
 def checkout():
-    customer_id = session.get('user_id')
+    user_email = session.get('user_email')
+    customer_id = get_customer_id_from_email(user_email)
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
     order_items = order.items
     for item in order_items:
@@ -136,10 +144,6 @@ def register():
     return render_template('register.html')
 
 
-
-
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -178,7 +182,8 @@ def add_to_cart():
             return redirect(url_for('store'))
 
         quantity = int(request.form.get('quantity', 1))
-        customer_id = session.get('user_id')
+        user_email = session.get('user_email')
+        customer_id = get_customer_id_from_email(user_email)
 
         order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
         if not order:
