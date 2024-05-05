@@ -4,7 +4,7 @@ from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
 from datetime import date
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
 from supabase import create_client, Client
@@ -29,7 +29,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 #Routes for Pages
     
 @app.route('/store')
-@login_required
 def store():
     query = request.args.get('query')
     sort_by = request.args.get('sort')
@@ -52,7 +51,7 @@ def index():
 
 @app.route('/view_cart')
 def view_cart():
-    customer_id = 1
+    customer_id = session.get('user_id')
     cart_order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
 
     if cart_order:
@@ -64,12 +63,12 @@ def view_cart():
 
 @app.route('/wishlist')
 def wishlist():
-    customer_id = 1
+    customer_id = session.get('user_id')
     return render_template('wishlist.html', wishlist_items=[])
 
 @app.route('/orders')
 def orders():
-    customer_id = 1
+    customer_id = session.get('user_id')
     orders = Orders.query.filter_by(customer_id=customer_id).order_by(desc(Orders.order_id)).all()
 
     # We also need the product and status information from the order
@@ -83,9 +82,8 @@ def orders():
     return render_template('orders.html', orders=orders)
 
 @app.route('/checkout')
-@login_required
 def checkout():
-    customer_id = 1
+    customer_id = session.get('user_id')
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
     order_items = order.items
     for item in order_items:
@@ -97,7 +95,6 @@ def checkout():
 
 
 #Routes for Functions
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -105,38 +102,42 @@ def register():
         password = request.form['password']
 
         try:
-            user = supabase.auth.sign_up({
-                'email': email,
-                'password': password
-            })
+            result = supabase.auth.sign_up({'email':email, 'password':password})
+            print("Supabase result:", result) 
 
-            if user.error:
-                flash(user.error.message, 'error')
+            if result:
+                sql = """
+                INSERT INTO customers (first_name, last_name, email, phone_number, address, city, state, zip_code)
+                VALUES (:first_name, :last_name, :email, :phone_number, :address, :city, :state, :zip_code);
+                """
+                db.session.execute(text(sql), {
+                    'first_name': request.form['first_name'],
+                    'last_name': request.form['last_name'],
+                    'email': email,
+                    'phone_number': request.form['phone_number'],
+                    'address': request.form['address'],
+                    'city': request.form['city'],
+                    'state': request.form['state'],
+                    'zip_code': request.form['zip_code']
+                })
+                db.session.commit()
+
+                flash('Registration successful! Please log in.', 'success')
+                return redirect(url_for('login'))
+            else:
+                flash('Failed to register with Supabase. Please try again.', 'error')
                 return redirect(url_for('register'))
 
-            customer_data = {
-                "first_name": request.form['first_name'],
-                "last_name": request.form['last_name'],
-                "email": email,
-                "phone_number": request.form['phone_number'],
-                "address": request.form['address'],
-                "city": request.form['city'],
-                "state": request.form['state'],
-                "zip_code": request.form['zip_code']
-            }
-            response = supabase.table('Customers').insert(customer_data).execute()
-
-            if response.error:
-                flash(response.error.message, 'error')
-                return redirect(url_for('register'))
-
-            flash('Registration successful! Please check your email to verify.', 'success')
-            return redirect(url_for('login'))
         except Exception as e:
-            flash(str(e), 'error')
+            db.session.rollback()
+            flash(f'Registration failed: {str(e)}', 'error')
             return redirect(url_for('register'))
 
     return render_template('register.html')
+
+
+
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -165,7 +166,6 @@ Session = scoped_session(sessionmaker(autoflush=False))
 
 @app.route('/cart', methods=['POST'])
 def add_to_cart():
-    session = Session()
     try:
         product_id = request.form.get('product_id')
         if not product_id:
@@ -178,12 +178,12 @@ def add_to_cart():
             return redirect(url_for('store'))
 
         quantity = int(request.form.get('quantity', 1))
-        customer_id = 1
+        customer_id = session.get('user_id')
 
-        order = Orders.query.filter_by(customer_id=1, status='cart').first()
+        order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
         if not order:
             order = Orders(
-                customer_id=1,
+                customer_id=customer_id,
                 order_date=date.today(),
                 total_amount=0.0, 
                 status='cart'
