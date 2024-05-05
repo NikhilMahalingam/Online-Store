@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
@@ -7,10 +7,15 @@ from datetime import date
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, scoped_session
+from supabase import create_client, Client
+from utils import login_required
+
 
 load_dotenv()
 
 DATABASE_URI=os.getenv('DATABASE_URI')
+SUPABASE_URL=os.getenv('SUPABASE_URL')
+SUPABASE_API_KEY=os.getenv('SUPABASE_API_KEY')
 
 
 app = Flask(__name__)
@@ -19,8 +24,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '\x93V\xa7\\\xdb\xb1\xd4d\xa9\x0f0\xe0\xae2p\tc\x079>\xd5*S\x07'
 db.init_app(app)
 
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
+
+#Routes for Pages
     
 @app.route('/store')
+@login_required
 def store():
     query = request.args.get('query')
     sort_by = request.args.get('sort')
@@ -74,6 +83,7 @@ def orders():
     return render_template('orders.html', orders=orders)
 
 @app.route('/checkout')
+@login_required
 def checkout():
     customer_id = 1
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
@@ -84,6 +94,72 @@ def checkout():
         item.price = product.price 
 
     return render_template('checkout.html', order=order)
+
+
+#Routes for Functions
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        try:
+            user = supabase.auth.sign_up({
+                'email': email,
+                'password': password
+            })
+
+            if user.error:
+                flash(user.error.message, 'error')
+                return redirect(url_for('register'))
+
+            customer_data = {
+                "first_name": request.form['first_name'],
+                "last_name": request.form['last_name'],
+                "email": email,
+                "phone_number": request.form['phone_number'],
+                "address": request.form['address'],
+                "city": request.form['city'],
+                "state": request.form['state'],
+                "zip_code": request.form['zip_code']
+            }
+            response = supabase.table('Customers').insert(customer_data).execute()
+
+            if response.error:
+                flash(response.error.message, 'error')
+                return redirect(url_for('register'))
+
+            flash('Registration successful! Please check your email to verify.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash(str(e), 'error')
+            return redirect(url_for('register'))
+
+    return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+
+        response = supabase.auth.sign_in_with_password({"email":email, "password":password})
+        if response:
+            session_obj = supabase.auth.get_session()
+            if session_obj:
+                    access_token = session_obj.access_token
+                    session['access_token'] = access_token 
+                    flash('Login successful!', 'success')
+
+            return redirect(url_for('index'))
+        else:
+                flash('Login failed. Please check your credentials.', 'danger')
+                return redirect(url_for('login'))
+    return render_template('login.html')
+
+
 
 Session = scoped_session(sessionmaker(autoflush=False))
 
@@ -102,7 +178,7 @@ def add_to_cart():
             return redirect(url_for('store'))
 
         quantity = int(request.form.get('quantity', 1))
-        customer_id = 1  # Temporary for testing
+        customer_id = 1
 
         order = Orders.query.filter_by(customer_id=1, status='cart').first()
         if not order:
@@ -169,6 +245,7 @@ def confirm_order():
             db.session.commit()
         flash("Your order has been placed!", 'success')
     return redirect(url_for('orders'))
+
 
 
 if __name__ == '__main__':
