@@ -10,7 +10,7 @@ CREATE TABLE Customers (
     customer_id SERIAL PRIMARY KEY,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
-    email VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
     phone_number VARCHAR(20),
     address VARCHAR(255),
     city VARCHAR(100),
