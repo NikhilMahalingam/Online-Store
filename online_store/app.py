@@ -37,6 +37,25 @@ def get_cart_items(order):
         cart_items = OrderItems.query.filter_by(order_id=order.order_id).all()
     return cart_items
 
+def get_trending_products(limit=3):
+    # products from most recent orders
+    recent_orders = Orders.query.order_by(Orders.order_date.desc()).limit(limit).all()
+    products_with_dates = []
+    for order in recent_orders:
+        for order_item in order.items:
+            product = Products.query.get(order_item.product_id)
+            if product:
+                products_with_dates.append((product, order.order_date))
+
+    sorted_products_with_dates = sorted(products_with_dates, key=lambda x: x[1], reverse=True)
+
+    trending_products = []
+    for product_with_date in sorted_products_with_dates[:limit]:
+        product, purchase_date = product_with_date
+        trending_products.append((product, purchase_date))
+
+    return trending_products
+
 # Global state
 @app.before_request
 def before_request():
@@ -50,6 +69,12 @@ def before_request():
 
     g.items_in_cart = total_items
     g.current_user = user_email
+
+# Define a custom Jinja filter for date format
+def date_format(date):
+    return date.strftime('%a, %b %d')
+
+app.jinja_env.filters['date_format'] = date_format
 
 # Routes for Pages
 @app.route('/store')
@@ -117,12 +142,14 @@ def checkout():
     
     order_items = order.items
 
+    trending_products = get_trending_products(2)
+
     for item in order_items:
         product = Products.query.get(item.product_id)
         item.product_name = product.name 
         item.price = product.price 
 
-    return render_template('checkout.html', order=order)
+    return render_template('checkout.html', order=order, trending_products=trending_products)
 
 
 # Routes for Functions
@@ -204,6 +231,7 @@ Session = scoped_session(sessionmaker(autoflush=False))
 
 @app.route('/cart', methods=['POST'])
 def add_to_cart():
+    current_page = request.form.get('current_page')
     try:
         product_id = request.form.get('product_id')
         if not product_id:
@@ -247,12 +275,12 @@ def add_to_cart():
         db.session.commit()
 
         flash(f"{quantity}x {product.name} added to cart successfully!", 'success')
-        return redirect(url_for('store'))
+        return redirect(url_for(current_page))
 
     except Exception as e:  
         db.session.rollback()
         flash(str(e), "error")  
-        return redirect(url_for('store'))
+        return redirect(url_for(current_page))
 
 @app.route('/delete_item/<int:order_item_id>', methods=['POST'])
 def delete_item(order_item_id):
@@ -280,7 +308,23 @@ def confirm_order():
         order_id = request.form['order_id']
         order = Orders.query.get(order_id)
         if order:
+            order_items = OrderItems.query.filter_by(order_id=order_id).all()
+
+            # Check if stock is sufficient for each order item
+            for order_item in order_items:
+                product = Products.query.get(order_item.product_id)
+                if not product or product.stock_quantity < order_item.quantity:
+                    flash(f"Error: Not enough stock for {order_item.quantity} units of {product.name}. There are only {product.stock_quantity} units available.", 'danger')
+                    return redirect(url_for('checkout'))
+                
+            # If not we're good to complete the transaction
             order.status = OrderStatus.completed
+
+            # Decrease the quantity of each item in the order
+            for order_item in order_items:
+                product = Products.query.get(order_item.product_id)
+                product.stock_quantity -= order_item.quantity
+
             db.session.commit()
         flash("Your order has been placed!", 'success')
     return redirect(url_for('orders'))
