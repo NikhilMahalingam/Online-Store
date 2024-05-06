@@ -148,7 +148,7 @@ def sell():
             return redirect(url_for('store'))
         except IntegrityError as e:
             db.session.rollback()
-            flash('An error occurred while listing the product. Please try again later.', 'danger')
+            flash(f'An error occurred while listing the product. Please try again later. {str(e)}', 'danger')
             return redirect(url_for('store'))
     
     # If it's just GET, give the HTML
@@ -252,7 +252,7 @@ def login():
                     session['access_token'] = access_token 
                     flash('Login successful!', 'success')
 
-                return redirect(url_for('stotre'))
+                return redirect(url_for('store'))
             else:
                     flash('Login failed. Please check your credentials.', 'danger')
                     return redirect(url_for('login'))
@@ -265,7 +265,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been logged out.' 'info')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('store'))
 
 Session = scoped_session(sessionmaker(autoflush=False))
