@@ -18,8 +18,7 @@ Stop: `brew services stop postgresql`
 ```
 psql postgres
 \i /path/to/schema.sql -- Build tables
-\i /path/to/insert_sample_products.sql -- Insert sample products data
-\i /path/to/insert_sample_customers.sql -- Insert sample customers data
+\i /path/to/insert_sample_products.sql -- Insert sample data
 ```
 
 ## Start Flask app

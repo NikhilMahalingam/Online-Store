@@ -11,6 +11,7 @@ class Products(db.Model):
     name = db.Column(String(100), nullable=False)
     description = db.Column(Text, nullable=True)
     price = db.Column(DECIMAL(10, 2), nullable=False)
+    slug = db.Column(String(255), nullable = True)
     stock_quantity = db.Column(Integer, nullable=False)
     order_items = relationship("OrderItems", back_populates="product")
 

@@ -23,6 +23,7 @@ CREATE TABLE Products (
     product_id SERIAL PRIMARY KEY,
     name VARCHAR(100),
     description TEXT,
+    slug VARCHAR(255),
     price DECIMAL(10, 2),
     stock_quantity INT
 );
