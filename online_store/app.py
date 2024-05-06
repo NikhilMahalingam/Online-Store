@@ -107,11 +107,37 @@ def view_cart():
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
 
-@app.route('/wishlist')
-def wishlist():
-    user_email = session.get('user_email')
-    customer_id = get_customer_id_from_email(user_email)
-    return render_template('wishlist.html', wishlist_items=[])
+@app.route('/sell', methods=['GET', 'POST'])
+def sell():
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        price = float(request.form['price'])
+        stock_quantity = int(request.form['stock_quantity'])
+
+        sql = """
+            INSERT INTO products (name, description, price, stock_quantity)
+            VALUES (:name, :description, :price, :stock_quantity)
+        """
+
+        try:
+            db.session.execute(text(sql), {
+                'name': name,
+                'description': description,
+                'price': price,
+                'stock_quantity': stock_quantity
+            })
+            db.session.commit()
+
+            flash('Product successfully listed!', 'success')
+            return redirect(url_for('store'))
+        except IntegrityError as e:
+            db.session.rollback()
+            flash('An error occurred while listing the product. Please try again later.', 'danger')
+            return redirect(url_for('store'))
+    
+    # If it's just GET, give the HTML
+    return render_template('sell.html')
 
 @app.route('/orders')
 def orders():
