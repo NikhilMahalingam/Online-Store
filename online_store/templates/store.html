@@ -123,6 +123,12 @@
             background-color: #0056b3;
             outline: none;
         }
+
+        .add-to-cart button[disabled] {
+            background-color: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -161,12 +167,17 @@
                 <p>{{ product.description }}</p>
                 <br />
                 <p class="price">${{ product.price }}</p>
-                <p class="stock">In Stock: {{ product.stock_quantity }}</p>
+                {% if product.stock_quantity <= 0 %}
+                    <p class="stock">Out of Stock</p>
+                {% else %}
+                    <p class="stock">In Stock: {{ product.stock_quantity }}</p>
+                {% endif %}
                 <form action="/cart" method="POST" class="add-to-cart">
+                    <input type="hidden" name="current_page" value="store">
                     <input type="hidden" name="product_id" value="{{ product.product_id }}">
                     <label for="quantity{{ product.product_id }}">Qty:</label>
                     <input type="number" id="quantity{{ product.product_id }}" name="quantity" value="1" min="1">
-                    <button type="submit">Add to Cart</button>
+                    <button type="submit" {% if product.stock_quantity <= 0 %} disabled {% endif %}>Add to Cart</button>
                 </form>
             </div>
             {% endfor %}

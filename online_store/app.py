@@ -31,7 +31,53 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 def get_customer_id_from_email(email):
     customer = db.session.query(Customers).filter_by(email=email).first()
     return customer.customer_id if customer else None
-    
+
+def get_cart_items(order):
+    cart_items = []
+    if order:
+        cart_items = OrderItems.query.filter_by(order_id=order.order_id).all()
+    return cart_items
+
+def get_trending_products(limit=3):
+    # products from most recent orders
+    recent_orders = Orders.query.order_by(Orders.order_date.desc()).limit(limit).all()
+    products_with_dates = []
+    for order in recent_orders:
+        for order_item in order.items:
+            product = Products.query.get(order_item.product_id)
+            if product:
+                products_with_dates.append((product, order.order_date))
+
+    sorted_products_with_dates = sorted(products_with_dates, key=lambda x: x[1], reverse=True)
+
+    trending_products = []
+    for product_with_date in sorted_products_with_dates[:limit]:
+        product, purchase_date = product_with_date
+        trending_products.append((product, purchase_date))
+
+    return trending_products
+
+# Global state
+@app.before_request
+def before_request():
+    user_email = session.get('user_email')
+    customer_id = get_customer_id_from_email(user_email)
+    cart_order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
+    cart_items = get_cart_items(cart_order)
+    total_items = 0
+    for cart_item in cart_items:
+        total_items += cart_item.quantity
+
+    g.items_in_cart = total_items
+    g.current_user = user_email
+
+# Define a custom Jinja filter for date format
+def date_format(date):
+    return date.strftime('%a, %b %d')
+
+app.jinja_env.filters['date_format'] = date_format
+
+# Routes for Pages
 @app.route('/store')
 def store():
     query = request.args.get('query')
@@ -81,11 +127,37 @@ def view_cart():
 
     return render_template('view_cart.html', cart_items=cart_items, total=cart_order.total_amount if cart_order else 0)
 
-@app.route('/wishlist')
-def wishlist():
-    user_email = session.get('user_email')
-    customer_id = get_customer_id_from_email(user_email)
-    return render_template('wishlist.html', wishlist_items=[])
+@app.route('/sell', methods=['GET', 'POST'])
+def sell():
+    if request.method == 'POST':
+        name = request.form['name']
+        description = request.form['description']
+        price = float(request.form['price'])
+        stock_quantity = int(request.form['stock_quantity'])
+
+        sql = """
+            INSERT INTO products (name, description, price, stock_quantity)
+            VALUES (:name, :description, :price, :stock_quantity)
+        """
+
+        try:
+            db.session.execute(text(sql), {
+                'name': name,
+                'description': description,
+                'price': price,
+                'stock_quantity': stock_quantity
+            })
+            db.session.commit()
+
+            flash('Product successfully listed!', 'success')
+            return redirect(url_for('store'))
+        except IntegrityError as e:
+            db.session.rollback()
+            flash('An error occurred while listing the product. Please try again later.', 'danger')
+            return redirect(url_for('store'))
+    
+    # If it's just GET, give the HTML
+    return render_template('sell.html')
 
 @app.route('/orders')
 def orders():
@@ -109,12 +181,15 @@ def checkout():
     customer_id = get_customer_id_from_email(user_email)
     order = Orders.query.filter_by(customer_id=customer_id, status='cart').first()
     order_items = order.items
+
+    trending_products = get_trending_products(2)
+
     for item in order_items:
         product = Products.query.get(item.product_id)
         item.product_name = product.name 
         item.price = product.price 
 
-    return render_template('checkout.html', order=order)
+    return render_template('checkout.html', order=order, trending_products=trending_products)
 
 
 #Routes for Functions
@@ -185,6 +260,7 @@ Session = scoped_session(sessionmaker(autoflush=False))
 
 @app.route('/cart', methods=['POST'])
 def add_to_cart():
+    current_page = request.form.get('current_page')
     try:
         product_id = request.form.get('product_id')
         if not product_id:
@@ -228,12 +304,12 @@ def add_to_cart():
         db.session.commit()
 
         flash(f"{quantity}x {product.name} added to cart successfully!", 'success')
-        return redirect(url_for('store'))
+        return redirect(url_for(current_page))
 
     except Exception as e:  
         db.session.rollback()
         flash(str(e), "error")  
-        return redirect(url_for('store'))
+        return redirect(url_for(current_page))
 
 @app.route('/delete_item/<int:order_item_id>', methods=['POST'])
 def delete_item(order_item_id):
@@ -261,7 +337,23 @@ def confirm_order():
         order_id = request.form['order_id']
         order = Orders.query.get(order_id)
         if order:
+            order_items = OrderItems.query.filter_by(order_id=order_id).all()
+
+            # Check if stock is sufficient for each order item
+            for order_item in order_items:
+                product = Products.query.get(order_item.product_id)
+                if not product or product.stock_quantity < order_item.quantity:
+                    flash(f"Error: Not enough stock for {order_item.quantity} units of {product.name}. There are only {product.stock_quantity} units available.", 'danger')
+                    return redirect(url_for('checkout'))
+                
+            # If not we're good to complete the transaction
             order.status = OrderStatus.completed
+
+            # Decrease the quantity of each item in the order
+            for order_item in order_items:
+                product = Products.query.get(order_item.product_id)
+                product.stock_quantity -= order_item.quantity
+
             db.session.commit()
         flash("Your order has been placed!", 'success')
     return redirect(url_for('orders'))
