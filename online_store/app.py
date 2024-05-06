@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 from db import db, Products, Customers, Orders, OrderItems, OrderStatus
 from dotenv import load_dotenv
 import os
