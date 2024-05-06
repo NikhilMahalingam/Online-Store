@@ -47,7 +47,22 @@ def store():
         filtered_products.sort(key=lambda x: x.price)
     elif sort_by == 'price-high':
         filtered_products.sort(key=lambda x: x.price, reverse=True)
+    
+    # Debug: Print product details to verify
+    for product in filtered_products:
+        print(product.name, product.slug)
+
     return render_template('store.html', products=filtered_products)
+
+
+@app.route('/product/<slug>')
+def product_detail(slug):
+    product = Products.query.filter_by(slug=slug).first()
+    if product:
+        return render_template('product_detail.html', product=product)
+    else:
+        flash('Product not found.', 'error')
+        return redirect(url_for('store'))
 
 @app.route('/')
 def index():
