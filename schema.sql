@@ -52,7 +52,3 @@ CREATE TABLE Order_Items (
     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
     FOREIGN KEY (product_id) REFERENCES Products(product_id)
 );
--- TODO: 
--- PAYMENTS?
--- RETURNS?
--- PRODUCT CATEGORIES?

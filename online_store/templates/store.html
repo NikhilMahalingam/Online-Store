@@ -162,7 +162,7 @@
         <div class="products">
             {% for product in products %}
             <div class="product">
-                <img src="{% if product.slug %}https://nmonlinestoreece.s3.us-east-2.amazonaws.com/{{ product.slug }}.jpg{% else %}path_to_a_default_image.jpg{% endif %}" alt="{{ product.name }}">
+                <img src="{% if product.slug %}https://nmonlinestoreece.s3.us-east-2.amazonaws.com/{{ product.slug }}.jpg{% else %}no_image.jpg{% endif %}" alt="{{ product.name }}">
                 <h2>{{ product.name }}</h2>
                 <p>{{ product.description }}</p>
                 <br />
